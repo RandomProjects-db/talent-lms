@@ -45,8 +45,8 @@ cookies.txt
 # Local development
 .env
 
-# Database files (preserve Railway data)
-database/
-*.db
-*.sqlite
-*.sqlite3
+# Database files (preserve Railway data) - but keep the directory
+database/*.db
+database/*.sqlite
+database/*.sqlite3
+!database/.gitkeep
