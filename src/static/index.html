@@ -962,6 +962,9 @@
                 const sectionElement = createSectionElement(section);
                 contentDiv.appendChild(sectionElement);
             });
+            
+            // Restore expanded state after rendering
+            restoreExpandedState();
         }
 
         function createSectionElement(section) {
@@ -1378,6 +1381,19 @@
         });
 
         // Utility functions
+        function restoreExpandedState() {
+            // Restore expanded sections
+            expandedSections.forEach(sectionId => {
+                const header = document.querySelector(`#${sectionId} .section-header`);
+                const content = document.querySelector(`#${sectionId} .section-content`);
+                
+                if (header && content) {
+                    header.classList.add('expanded');
+                    content.classList.add('expanded');
+                }
+            });
+        }
+
         function toggleSection(sectionId) {
             const header = document.querySelector(`#section-${sectionId} .section-header`);
             const content = document.getElementById(`content-${sectionId}`);
