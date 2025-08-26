@@ -25,16 +25,21 @@ app.register_blueprint(section_bp, url_prefix='/api')
 
 # Database configuration
 # Use PostgreSQL on Railway, SQLite locally
-if os.environ.get('RAILWAY_ENVIRONMENT'):
+database_url = os.environ.get('DATABASE_URL')
+print(f"🔍 DATABASE_URL: {database_url}")
+print(f"🔍 RAILWAY_ENVIRONMENT: {os.environ.get('RAILWAY_ENVIRONMENT')}")
+
+if database_url:
     # Railway PostgreSQL
-    database_url = os.environ.get('DATABASE_URL')
-    if database_url and database_url.startswith('postgres://'):
+    if database_url.startswith('postgres://'):
         # Fix for newer SQLAlchemy versions
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    print(f"✅ Using PostgreSQL: {database_url[:50]}...")
 else:
-    # Local SQLite
+    # Local SQLite fallback
     app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
+    print("✅ Using SQLite fallback")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
