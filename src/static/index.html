@@ -1311,7 +1311,16 @@
                     closeModal();
                     await loadProject(); // Only reload for edits
                 } else {
-                    // Create new item - keep modal open and DON'T reload
+                    // Create new item - use localStorage to persist modal state
+                    const modalState = {
+                        isOpen: true,
+                        section: currentSection,
+                        subsection: currentSubsection,
+                        priority: priority,
+                        type: type
+                    };
+                    localStorage.setItem('modalState', JSON.stringify(modalState));
+                    
                     if (currentSubsection) {
                         // Create child item
                         await apiCall(`/sections/${currentSection}/items`, {
@@ -1327,19 +1336,38 @@
                     }
                     showToast('✅ Item added! Add another or click Close', 'success');
                     
-                    // Clear form for next item but keep modal open
+                    // Clear form for next item
                     document.getElementById('itemText').value = '';
                     document.getElementById('itemDescription').value = '';
                     
-                    // Focus back on text input for quick entry
-                    setTimeout(() => {
-                        document.getElementById('itemText').focus();
-                    }, 100);
+                    // Reload project but restore modal afterwards
+                    await loadProject();
                     
-                    // DON'T call loadProject() - just let user continue adding items
-                    // The items will show up when they close the modal or refresh
+                    // Restore modal state from localStorage
+                    const savedState = localStorage.getItem('modalState');
+                    if (savedState) {
+                        const state = JSON.parse(savedState);
+                        if (state.isOpen) {
+                            currentSection = state.section;
+                            currentSubsection = state.subsection;
+                            currentEditingItem = null;
+                            
+                            document.getElementById('modalTitle').textContent = state.subsection ? 'Add Child Items' : 'Add New Items';
+                            document.getElementById('itemText').value = '';
+                            document.getElementById('itemPriority').value = state.priority;
+                            document.getElementById('itemType').value = state.type;
+                            document.getElementById('itemDescription').value = '';
+                            document.getElementById('saveCloseBtn').style.display = 'inline-block';
+                            document.getElementById('itemModal').style.display = 'block';
+                            
+                            setTimeout(() => {
+                                document.getElementById('itemText').focus();
+                            }, 100);
+                        }
+                    }
                 }
             } catch (error) {
+                localStorage.removeItem('modalState'); // Clear on error
                 showToast('Error saving item: ' + error.message, 'error');
             }
         });
@@ -1383,6 +1411,9 @@
 
         function closeModal() {
             document.getElementById('itemModal').style.display = 'none';
+            
+            // Clear modal state from localStorage
+            localStorage.removeItem('modalState');
             
             // Reload project to show any new items that were added
             if (currentProject) {
