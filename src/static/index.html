@@ -560,6 +560,9 @@
             <button class="btn btn-success" onclick="showNewProjectModal()">
                 <i class="fas fa-plus"></i> New Project
             </button>
+            <button class="btn btn-danger" onclick="deleteCurrentProject()" id="deleteProjectBtn" disabled>
+                <i class="fas fa-trash"></i> Delete Project
+            </button>
             <button class="btn btn-warning" onclick="showProjectSettings()" id="projectSettingsBtn" disabled>
                 <i class="fas fa-cog"></i> Settings
             </button>
@@ -876,6 +879,7 @@
                 document.getElementById('breadcrumbPath').textContent = 'Select a project to get started';
                 document.getElementById('pseudocodeContent').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Select a project to view its content</div>';
                 document.getElementById('projectSettingsBtn').disabled = true;
+                document.getElementById('deleteProjectBtn').disabled = true;
                 return;
             }
 
@@ -885,6 +889,7 @@
                 
                 document.getElementById('breadcrumbPath').textContent = `Project: ${projectData.name}`;
                 document.getElementById('projectSettingsBtn').disabled = false;
+                document.getElementById('deleteProjectBtn').disabled = false;
                 
                 renderPseudocode();
                 updateStats();
@@ -1503,6 +1508,48 @@
                 showToast('Project exported successfully', 'success');
             } catch (error) {
                 showToast('Error exporting project: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteCurrentProject() {
+            if (!currentProject) {
+                showToast('Please select a project first', 'warning');
+                return;
+            }
+
+            const confirmDelete = confirm(`Are you sure you want to delete "${currentProject.name}"?\n\nThis will permanently delete:\n- All sections\n- All items\n- All project data\n\nThis action cannot be undone!`);
+            
+            if (!confirmDelete) {
+                return;
+            }
+
+            try {
+                await apiCall(`/projects/${currentProject.id}`, {
+                    method: 'DELETE'
+                });
+                
+                showToast('Project deleted successfully', 'success');
+                
+                // Clear current project
+                currentProject = null;
+                projectData = null;
+                
+                // Reload projects list
+                await loadProjects();
+                
+                // Clear the main content
+                document.getElementById('projectContent').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-spinner fa-spin"></i> Select a project to view its content
+                    </div>
+                `;
+                
+                // Disable buttons
+                document.getElementById('deleteProjectBtn').disabled = true;
+                document.getElementById('projectSettingsBtn').disabled = true;
+                
+            } catch (error) {
+                showToast('Error deleting project: ' + error.message, 'error');
             }
         }
 
