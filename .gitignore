@@ -44,3 +44,9 @@ cookies.txt
 
 # Local development
 .env
+
+# Database files (preserve Railway data)
+database/
+*.db
+*.sqlite
+*.sqlite3
