@@ -199,6 +199,40 @@ def delete_item(item_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@section_bp.route('/sections/<int:section_id>', methods=['PUT'])
+def update_section(section_id):
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    section = Section.query.get(section_id)
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+    
+    if not check_project_access(section.project_id, user_id):
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        data = request.get_json()
+        section.name = data.get('name', section.name)
+        section.priority = data.get('priority', section.priority)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Section updated successfully',
+            'section': {
+                'id': section.id,
+                'name': section.name,
+                'priority': section.priority,
+                'order_index': section.order_index
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @section_bp.route('/sections/<int:section_id>', methods=['DELETE'])
 def delete_section(section_id):
     user_id = require_auth()
